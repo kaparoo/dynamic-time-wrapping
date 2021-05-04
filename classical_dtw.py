@@ -46,38 +46,34 @@ def compute_accumulated_cost_matrix(x: Sequence[Number],
             is set to default.
 
     Returns:
-        D: Accumulated cost matrix (`N` ¡¿ `M`).
+        D: Accumulated cost matrix (`N` x `M`).
     """
 
     N: Final = len(x)
     M: Final = len(y)
 
-    C: Matrix = [[c(x[n], y[m]) for m in range(M)] for n in range(N)]
-
-    # display_matrix(x, y, C)
-
     D: Matrix = [[0 for _ in range(M)] for _ in range(N)]
 
-    D[0][0] = c(y[0], x[0])
-
-    for n in range(1, N):
-        D[n][0] = C[n][0] + D[n-1][0]
-
-    for m in range(1, M):
-        D[0][m] = C[0][m] + D[0][m-1]
-
-    for n in range(1, N):
-        for m in range(1, M):
-            D[n][m] = C[n][m] + min(D[n-1][m], D[n][m-1], D[n-1][m-1])
+    for n in range(0, N):
+        for m in range(0, M):
+            if n == 0 and m == 0:
+                D[0][0] = c(x[n], y[m])
+            elif n == 0:  # m ¡ô [1, M-1]
+                D[0][m] = c(x[n], y[m]) + D[0][m-1]
+            elif m == 0:  # n ¡ô [1, N-1]
+                D[n][0] = c(x[n], y[m]) + D[n-1][0]
+            else:
+                D[n][m] = c(x[n], y[m]) + \
+                    min(D[n-1][m], D[n][m-1], D[n-1][m-1])
 
     return D
 
 
 def classical_dtw(D: Matrix):
-    """Operates dynamic time wrapping.
+    """Operates (classical) dynamic time wrapping.
 
     Args:
-        D: Accumulated cost matrix of size N ¡¿ M.
+        D: Accumulated cost matrix of size N x M.
 
     Returns:
         p: Optimal alignment path.
@@ -105,11 +101,11 @@ def classical_dtw(D: Matrix):
                 candidates.append((n, m-1))
 
         # Find next point that requires least cost to move
-        (n, m) = min(candidates, key=lambda pt: D[pt[0]][pt[1]])
+        (n, m) = min(candidates, key=lambda point: D[point[0]][point[1]])
     else:
-        p.append((0, 0))  # Insert end point: (0, 0) to the path
+        p.append((0, 0))
 
-    return p
+    return p[::-1]
 
 
 if __name__ == '__main__':
